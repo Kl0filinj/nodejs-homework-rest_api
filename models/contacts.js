@@ -1,8 +1,16 @@
 const Contact = require("../services/schema");
 
-const listContacts = async (_, res, next) => {
+const listContacts = async (req, res, next) => {
+  const { _id } = req.user;
+  const { favorite = null, page = 0, limit = 5 } = req.query;
+  let options = { owner: _id };
+  if (favorite) {
+    options = { ...options, favorite };
+  }
   try {
-    const contacts = await Contact.find({});
+    const contacts = await Contact.find(options, { __v: 0 })
+      .skip(page * limit)
+      .limit(limit);
     return res.json({ data: contacts, status: 200 });
   } catch (error) {
     next(error);
@@ -11,8 +19,9 @@ const listContacts = async (_, res, next) => {
 
 const getContactById = async (req, res, next) => {
   const { contactId } = req.params;
+  const { _id } = req.user;
   try {
-    const contactById = await Contact.findById({ _id: contactId });
+    const contactById = await Contact.findById({ _id: contactId, owner: _id });
     if (contactById) {
       return res.json({ data: contactById, status: 200 });
     } else {
@@ -29,8 +38,12 @@ const getContactById = async (req, res, next) => {
 
 const removeContact = async (req, res, next) => {
   const { contactId } = req.params;
+  const { _id } = req.user;
   try {
-    const responce = await Contact.findOneAndRemove({ _id: contactId });
+    const responce = await Contact.findOneAndRemove({
+      _id: contactId,
+      owner: _id,
+    });
     if (responce) {
       return res.json({ data: responce, status: 200 });
     } else {
@@ -47,8 +60,9 @@ const removeContact = async (req, res, next) => {
 
 const addContact = async (req, res, next) => {
   const { name, email, phone } = req.body;
+  const { _id } = req.user;
   try {
-    const responce = await Contact.create({ name, email, phone });
+    const responce = await Contact.create({ name, email, phone, owner: _id });
     return res.json({ data: responce, status: 201 });
   } catch (error) {
     console.log(error);
@@ -59,9 +73,10 @@ const addContact = async (req, res, next) => {
 const updateContact = async (req, res, next) => {
   const { contactId } = req.params;
   const { name, email, phone } = req.body;
+  const { _id } = req.user;
   try {
     const responce = await Contact.findOneAndUpdate(
-      { _id: contactId },
+      { _id: contactId, owner: _id },
       { name, email, phone }
     );
     if (responce) {
@@ -81,9 +96,10 @@ const updateContact = async (req, res, next) => {
 const updateStatusContact = async (req, res, next) => {
   const { contactId } = req.params;
   const { favorite = false } = req.body;
+  const { _id } = req.user;
   try {
     const responce = await Contact.findOneAndUpdate(
-      { _id: contactId },
+      { _id: contactId, owner: _id },
       { favorite }
     );
     if (responce) {
