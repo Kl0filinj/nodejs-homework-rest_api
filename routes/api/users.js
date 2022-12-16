@@ -4,6 +4,8 @@ const {
   login,
   getCurrentUserInfo,
   logOut,
+  registrationVerification,
+  forcedVerification,
   avatarPatchController,
 } = require("../../models/users");
 const auth = require("../../middleware/auth");
@@ -21,6 +23,10 @@ const router = express.Router();
 router.post("/signup", userRegDataValidationSchema, registration);
 
 router.patch("/avatars", auth, upload.single("avatar"), avatarPatchController);
+
+router.get("/verify/:verificationToken", registrationVerification);
+
+router.post("/verify", forcedVerification);
 
 router.post("/login", userRegDataValidationSchema, login);
 
